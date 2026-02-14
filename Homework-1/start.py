@@ -33,8 +33,12 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# img stronze: 9, 13, 14, 16, 18, 23
+
+# img stronze v2: 16, 18
 dir_path = './images/'
-i = 2
+i = 16
 img_name = f'stop{i}.png'
 img_path = os.path.join(dir_path, img_name)
 img = cv2.imread(img_path)
@@ -43,7 +47,7 @@ img = cv2.imread(img_path)
 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 # apply median filter to remove noise
-img_medianfiltered = cv2.medianBlur(img_rgb, ksize=5)
+img_medianfiltered = cv2.medianBlur(img_rgb, ksize=7)
 
 # Soluzione: 
 img = cv2.cvtColor(img_medianfiltered, cv2.COLOR_RGB2LAB)
@@ -53,7 +57,7 @@ flat_img = img.reshape((-1, 3))
 flat_img = np.float32(flat_img)
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-K = 5
+K = 7
 ret,label,center=cv2.kmeans(
     flat_img,
     K,
@@ -86,39 +90,58 @@ plt.imshow(mask)
 plt.title("Binary Mask")
 plt.show()
 
-# find contours on the binary mask
-contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# apply morphological operations
+kernel = np.ones((9, 9), np.uint8)   
+# apply "Closing" to fill holes and merge fragments
+mask_curata = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
-# copy the original image to draw on it
+# find contours
+contours, hierarchy = cv2.findContours(mask_curata, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
 img_contours = img.copy()
-
-# draw all the contours found (-1) in green (0, 255, 0) with thickness 3
 cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
 
-# show the results
 plt.imshow(img_contours)
-plt.title("Contours")
+plt.title("Tutti i Contorni (Inclusi i buchi!)")
 plt.show()
 
-img_boxes = img.copy()
+img_boxes = img_rgb.copy()
 
-# make sure we found at least one contour
-if len(contours) > 0:
-    # find the contour with the largest area using the max() function
-    contorno_principale = max(contours, key=cv2.contourArea)
+contorno_migliore = None
+area_massima_valida = 0
+
+for cnt in contours:
+    area = cv2.contourArea(cnt)
     
-    # calculate the coordinates of the bounding box
-    x, y, w, h = cv2.boundingRect(contorno_principale)
-    
-    # draw the bounding box
+    if area > 200: 
+        x, y, w, h = cv2.boundingRect(cnt)
+        aspect_ratio = float(w) / h
+        
+        # find the convex hull and calculate the solidity
+        hull = cv2.convexHull(cnt)
+        hull_area = cv2.contourArea(hull)
+        
+        # avoid division by zero
+        if hull_area > 0:
+            solidity = float(area) / hull_area
+            
+            # the signle sign must be a square and solid
+            if 0.7 <= aspect_ratio <= 1.3 and solidity > 0.85:
+                
+                if area > area_massima_valida:
+                    area_massima_valida = area
+                    contorno_migliore = cnt
+
+# draw the best contour
+if contorno_migliore is not None:
+    x, y, w, h = cv2.boundingRect(contorno_migliore)
     cv2.rectangle(img_boxes, (x, y), (x+w, y+h), (0, 255, 0), 5)
+    print("Sign found in this image.")
+else:
+    print("No sign found in this image.")
 
-# convert the image to RGB
-img_boxes_rgb = cv2.cvtColor(img_boxes, cv2.COLOR_LAB2RGB)
-
-# show the results
-plt.imshow(img_boxes_rgb)
-plt.title("Identified Sign!")
+plt.imshow(img_boxes)
+plt.title("Final Result")
 plt.show()
 
 #%%
