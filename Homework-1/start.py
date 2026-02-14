@@ -102,7 +102,7 @@ img_contours = img.copy()
 cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
 
 plt.imshow(img_contours)
-plt.title("Tutti i Contorni (Inclusi i buchi!)")
+plt.title("All Contours")
 plt.show()
 
 img_boxes = img_rgb.copy()
