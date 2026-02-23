@@ -13,6 +13,7 @@ def debug_plot_kmeans(img_lab, center, label, K):
     """
     Helper function used during development to visualize the results of the K-means clustering.
     It reconstructs the image using the cluster centers and plots it with a custom legend.
+    Reference: '3. Color Quantization' at https://docs.opencv.org/4.x/d1/d5c/tutorial_py_kmeans_opencv.html
     """
     # Select only the A and B channels from the LAB image for shape reference
     ab_channel = img_lab[:, :, 1:3]
@@ -74,6 +75,7 @@ def debug_plot_kmeans(img_lab, center, label, K):
 def debug_plot_contours(img_rgb, contours):
     """
     Helper function used during development to visualize all detected contours on the original image.
+    Reference: https://docs.opencv.org/3.4/d4/d73/tutorial_py_contours_begin.html
     """
     # Create a copy of the original RGB image to draw contours on
     img_contours = img_rgb.copy()
@@ -91,6 +93,9 @@ def get_box(img):
     """
     Analyzes the input BGR image, isolates the red color using K-Means clustering in the LAB color space,
     finds the contour of the stop sign based on area and aspect ratio, and returns its bounding box.
+    References:
+    - https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
+    - https://docs.opencv.org/4.x/d1/d5c/tutorial_py_kmeans_opencv.html
     """
     # Apply median filter with a kernel size of 7 to reduce noise while keeping edges sharp
     img_medianfiltered = cv2.medianBlur(img, ksize=7)
@@ -119,7 +124,7 @@ def get_box(img):
         K, 
         None, 
         criteria, 
-        20, # Number of attempts with different initial cluster centerings
+        10, # Number of attempts with different initial cluster centerings
         cv2.KMEANS_PP_CENTERS # Use K-means++ initialization for better center selection
     )
 
