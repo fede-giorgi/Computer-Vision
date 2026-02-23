@@ -13,7 +13,6 @@ def debug_plot_kmeans(img_lab, center, label, K):
     """
     Helper function used during development to visualize the results of the K-means clustering.
     It reconstructs the image using the cluster centers and plots it with a custom legend.
-    NOTE: This function is kept to show the thought process but is NOT called during execution to save time.
     """
     # Select only the A and B channels from the LAB image for shape reference
     ab_channel = img_lab[:, :, 1:3]
@@ -75,7 +74,6 @@ def debug_plot_kmeans(img_lab, center, label, K):
 def debug_plot_contours(img_rgb, contours):
     """
     Helper function used during development to visualize all detected contours on the original image.
-    NOTE: This function is kept to show the thought process but is NOT called during execution.
     """
     # Create a copy of the original RGB image to draw contours on
     img_contours = img_rgb.copy()
@@ -128,6 +126,12 @@ def get_box(img):
     # Convert the resulting cluster centers back to unsigned 8-bit integers
     center = np.uint8(center)
 
+    # =========================================================================
+    # DEBUG PLOT 1: K-MEANS RESULTS
+    # Uncomment the line below to see how the image was clustered.
+    # debug_plot_kmeans(img_lab, center, label, K)
+    # =========================================================================
+
     # Find the indices of clusters where the A channel value (Red/Green axis) is >= 145, indicating a strong red color
     red_cluster_indices = np.where(center[:, 0] >= 145)[0]
    
@@ -144,6 +148,13 @@ def get_box(img):
 
     # Find the contours of the red regions using the binary mask
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # =========================================================================
+    # DEBUG PLOT 2: ALL CONTOURS
+    # Uncomment the 2 lines below to see all the contours found on the mask.
+    # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # debug_plot_contours(img_rgb, contours)
+    # =========================================================================
 
     # Initialize a variable to store the contour that best fits the stop sign description
     best_contour = None
